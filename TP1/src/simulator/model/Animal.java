@@ -1,5 +1,7 @@
 package simulator.model;
 
+import org.json.JSONObject;
+
 import simulator.misc.Utils;
 import simulator.misc.Vector2D;
 
@@ -57,14 +59,92 @@ public abstract class Animal implements Entity, AnimalInfo {
 		regionMngr = regMngr;
 		if (pos == null) pos = Vector2D.getRandomVector(0.0, regionMngr.getMinDimension() - 1);
 		else  {
-			// TODO: Ajustar dentro del mapa
+			double x = pos.getX(), y = pos.getY();
+			double width = regionMngr.getWidth();
+			double height = regionMngr.getHeigh();
+			while (x >= width) x = (x - width);  
+			while (x < 0) x = (x + width);  
+			while (y >= height) y = (y - height);  
+			while (y < 0) y = (y + height);
+			Vector2D newPos = new Vector2D(x, y);
+			pos = newPos;
 		}
 		dest = Vector2D.getRandomVector(0.0, regionMngr.getMinDimension() - 1);
 	}
 	
-	Animal deliverBaby() {
+	Animal deliverBaby() { // TODO: Excepción si null
 		Animal newBaby = baby;
 		baby = null;
 		return newBaby;
-	}	
+	}
+	
+	protected void move(double speed) {
+		pos = pos.plus(dest.minus(pos).direction().scale(speed));
+	}
+	
+	protected void setState(State state) {
+		this.state = state;
+		switch (state) {
+		case NORMAL:
+			setNormalStateAction();
+			break;
+		case MATE:
+			setMateStateAction();
+			break;
+		case HUNGER:
+			setHungerStateAction();
+			break;
+		case DANGER:
+			setDangerStateAction();
+			break;
+		case DEAD:
+			setDeadStateAction();
+			break;
+		}
+	}
+	
+	abstract protected void setNormalStateAction();
+	abstract protected void setMateStateAction();
+	abstract protected void setHungerStateAction();
+	abstract protected void setDangerStateAction();
+	abstract protected void setDeadStateAction();
+	
+	public JSONObject asJSON() {
+		JSONObject json = new JSONObject();
+		json.put("pos", pos.toString());
+		json.put("gcode", geneticCode);
+		json.put("diet", diet.toString());
+		json.put("state", state.toString());
+		return json;		
+	}
+	
+	@Override public State getState() { return state; }
+	@Override public Vector2D getPosition() { return pos; }
+	@Override public String getGeneticCode() { return geneticCode; }
+	@Override public Diet getDiet() { return diet; }
+	@Override public double getSpeed() { return speed; }
+	@Override public double getSightRange() { return sightRange; }
+	@Override public double getEnergy() { return energy; }
+	@Override public double getAge() { return age; }
+	@Override public Vector2D getDestination() { return dest; }
+	@Override public boolean isPregnant() { return (baby != null); }
+	
+	public AnimalMapView getRegionManager() { return regionMngr; }
+	public double getDesire() { return desire; }
+	
+	public void setPosition(Vector2D pos) {	this.pos = pos;	}
+	public void setDestination(Vector2D dest) {this.dest = dest; }
+	public void setMateTarget(Animal mateTarget) { this.mateTarget = mateTarget; }
+	
+	protected void setEnergy(double energy) {
+		this.energy = energy;
+		if (energy > 100.0) energy = 100.0;
+		else if (energy < 0.0) energy = 0.0;
+	}
+	protected void setAge(double age) {
+		this.age = age;
+	}
+	protected void setDesire(double desire) {
+		this.desire = desire;
+	}
 }
