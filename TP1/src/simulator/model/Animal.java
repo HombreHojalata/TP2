@@ -1,5 +1,7 @@
 package simulator.model;
 
+import java.util.List;
+
 import org.json.JSONObject;
 
 import simulator.misc.Utils;
@@ -22,6 +24,11 @@ public abstract class Animal implements Entity, AnimalInfo {
 	private SelectionStrategy mateStrategy;
 
 	protected Animal(String geneticCode, Diet diet, double sightRange, double initSpeed, SelectionStrategy mateStrategy, Vector2D pos) {
+		if (geneticCode == null || geneticCode.isEmpty()) throw new IllegalArgumentException("Genetic code cannot be empty");
+		if (sightRange <= 0) throw new IllegalArgumentException("Sight range must be positive");
+		if (initSpeed <= 0) throw new IllegalArgumentException("Initial speel must be positive");
+		if (mateStrategy == null) throw new IllegalArgumentException("Mate strategy cannot be null");
+		
 		this.geneticCode = geneticCode;
 		this.diet = diet;
 		this.state = State.NORMAL;
@@ -57,22 +64,15 @@ public abstract class Animal implements Entity, AnimalInfo {
 	
 	void init(AnimalMapView regMngr) {
 		regionMngr = regMngr;
-		if (pos == null) pos = Vector2D.getRandomVector(0.0, regionMngr.getMinDimension() - 1);
+		if (pos == null)
+			pos = Vector2D.getRandomVector2(0.0, regionMngr.getWidth(), regionMngr.getHeight());
 		else  {
-			double x = pos.getX(), y = pos.getY();
-			double width = regionMngr.getWidth();
-			double height = regionMngr.getHeigh();
-			while (x >= width) x = (x - width);  
-			while (x < 0) x = (x + width);  
-			while (y >= height) y = (y - height);  
-			while (y < 0) y = (y + height);
-			Vector2D newPos = new Vector2D(x, y);
-			pos = newPos;
+			pos.adjustPos(regionMngr.getWidth(), regionMngr.getHeight());
 		}
-		dest = Vector2D.getRandomVector(0.0, regionMngr.getMinDimension() - 1);
+		dest = Vector2D.getRandomVector2(0.0, regionMngr.getWidth(), regionMngr.getHeight());
 	}
 	
-	Animal deliverBaby() { // TODO: Excepción si null
+	Animal deliverBaby() { // TODO: Excepciï¿½n si null
 		Animal newBaby = baby;
 		baby = null;
 		return newBaby;
@@ -111,7 +111,7 @@ public abstract class Animal implements Entity, AnimalInfo {
 	
 	public JSONObject asJSON() {
 		JSONObject json = new JSONObject();
-		json.put("pos", pos.toString());
+		json.put("pos", new double[]{ pos.getX(), pos.getY() });
 		json.put("gcode", geneticCode);
 		json.put("diet", diet.toString());
 		json.put("state", state.toString());
@@ -131,20 +131,37 @@ public abstract class Animal implements Entity, AnimalInfo {
 	
 	public AnimalMapView getRegionManager() { return regionMngr; }
 	public double getDesire() { return desire; }
+	public Animal getMateTarget() { return mateTarget; }
+	public SelectionStrategy getMateStrategy() { return mateStrategy; }
 	
 	public void setPosition(Vector2D pos) {	this.pos = pos;	}
 	public void setDestination(Vector2D dest) {this.dest = dest; }
 	public void setMateTarget(Animal mateTarget) { this.mateTarget = mateTarget; }
+	protected void setBaby(Animal baby) { this.baby = baby; }
 	
 	protected void setEnergy(double energy) {
-		this.energy = energy;
-		if (energy > 100.0) energy = 100.0;
-		else if (energy < 0.0) energy = 0.0;
+		if (energy > 100.0) this.energy = 100.0;
+		else if (energy < 0.0) this.energy = 0.0;
+		else this.energy = energy;
 	}
 	protected void setAge(double age) {
+		if (age < 0.0) this.age = 0.0;
 		this.age = age;
 	}
 	protected void setDesire(double desire) {
+		if (desire < 0.0) this.desire = 0.0;
 		this.desire = desire;
+	}
+	
+	protected boolean outOfMap() {
+		double x = pos.getX(), y = pos.getY();
+		return (x < 0 || x >= regionMngr.getWidth() || y < 0 || y >= regionMngr.getHeight());
+	}
+	
+	protected Animal findTarget(String attribute, String value, SelectionStrategy strategy) {
+		List<Animal> candidates = regionMngr.getAnimalsInRange(pos, sightRange, attribute, value);
+		candidates.remove(this);
+		if (candidates.isEmpty()) return null;
+		return strategy.select(this, candidates);
 	}
 }

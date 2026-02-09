@@ -111,6 +111,15 @@ public class Vector2D {
 		return new Vector2D(x, y);
 	}
 
+	public static Vector2D getRandomVector2(double min, double maxX, double maxY) {
+		assert (maxX >= min && maxY >= min);
+		double x = min + Utils.RAND.nextDouble(maxX - min);
+		double y = min + Utils.RAND.nextDouble(maxY - min);
+		assert (x >= min && x <= maxX);
+		assert (y >= min && y <= maxY);
+		return new Vector2D(x, y);
+	}
+
 	public JSONArray asJSONArray() {
 		JSONArray a = new JSONArray();
 		a.put(x);
@@ -151,4 +160,10 @@ public class Vector2D {
 		return "[" + x + "," + y + "]";
 	}
 
+	public void adjustPos(double width, double height) {
+		if (x >= width) x = width - 1;
+		else if (x < 0) x = 0;
+		if (y >= height) y = height - 1;
+		else if (y < 0) y = 0;
+	}
 }
