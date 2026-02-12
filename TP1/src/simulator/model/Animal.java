@@ -164,4 +164,22 @@ public abstract class Animal implements Entity, AnimalInfo {
 		if (candidates.isEmpty()) return null;
 		return strategy.select(this, candidates);
 	}
+	
+	protected void moveAndStats(double dt, double E, double D, double speedMult) {
+		double speed = getSpeed() * dt * Math.exp((getEnergy() - 100.0) * 0.007);
+		move(speed * speedMult);
+		addAge(dt);
+		addEnergy(E * speedMult);
+		addDesire(D);
+	}
+	
+	protected void addEnergy(double amount) {
+		setEnergy(getEnergy() + amount);
+	}
+	protected void addAge(double amount) {
+		setAge(getAge() + amount);
+	}
+	protected void addDesire(double amount) {
+		setDesire(getDesire() + amount);
+	}
 }

@@ -50,7 +50,7 @@ public class Sheep extends Animal {
 	}
 	
 	private void updateNormal(double dt) {
-		moveAndStats(dt, 1.0);
+		moveAndStats(dt, -20.0 * dt, 40.0 * dt, 1.0);
 		if (getPosition().distanceTo(getDestination()) < 8.0) 
 			setPosition(Vector2D.getRandomVector2(0.0, getRegionManager().getWidth(), getRegionManager().getHeight()));
 		if (dangerSource == null)
@@ -68,7 +68,7 @@ public class Sheep extends Animal {
 			updateNormal(dt);
 		else {
 			setDestination(getPosition().plus(getPosition().minus(dangerSource.getPosition().direction())));
-			moveAndStats(dt, 2.0);
+			moveAndStats(dt, -20.0 * dt * 1.2, 40.0 * dt, 2.0);
 		}
 		if (dangerSource == null || getPosition().distanceTo(dangerSource.getPosition()) > getSightRange())
 			dangerSource = findTarget("diet", Diet.CARNIVORE.toString(), dangerStrategy);
@@ -86,7 +86,7 @@ public class Sheep extends Animal {
 		}
 		if (getMateTarget() != null) {
 			setDestination(getMateTarget().getPosition());
-			moveAndStats(dt, 2.0);
+			moveAndStats(dt, -20.0 * dt * 1.2, 40.0 * dt, 2.0);
 			if (getPosition().distanceTo(getMateTarget().getPosition()) < 8.0) {
 				setDesire(0.0);
 				getMateTarget().setDesire(0.0);
@@ -102,13 +102,6 @@ public class Sheep extends Animal {
 			setState(State.NORMAL);
 	}
 
-	private void moveAndStats(double dt, double speedMult) {
-		double speed = getSpeed() * dt * Math.exp((getEnergy() - 100.0) * 0.007);
-		move(speed * speedMult);
-		addAge(dt);
-		addEnergy(-20.0 * dt * speedMult);
-		addDesire(40.0 * dt);
-	}
 	
 	@Override protected void setNormalStateAction() { dangerSource = null; setMateTarget(null); }
 	@Override protected void setMateStateAction() {	dangerSource = null; }
@@ -116,13 +109,5 @@ public class Sheep extends Animal {
 	@Override protected void setDangerStateAction() { setMateTarget(null); }
 	@Override protected void setDeadStateAction() { dangerSource = null; setMateTarget(null); }
 	
-	private void addEnergy(double amount) {
-		setEnergy(getEnergy() + amount);
-	}
-	private void addAge(double amount) {
-		setAge(getAge() + amount);
-	}
-	private void addDesire(double amount) {
-		setDesire(getDesire() + amount);
-	}
+	
 } 
