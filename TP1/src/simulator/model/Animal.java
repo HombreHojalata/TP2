@@ -1,6 +1,7 @@
 package simulator.model;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.json.JSONObject;
 
@@ -158,11 +159,25 @@ public abstract class Animal implements Entity, AnimalInfo {
 		return (x < 0 || x >= regionMngr.getWidth() || y < 0 || y >= regionMngr.getHeight());
 	}
 	
-	protected Animal findTarget(String attribute, String value, SelectionStrategy strategy) {
-		List<Animal> candidates = regionMngr.getAnimalsInRange(pos, sightRange, attribute, value);
+	class PAnimal implements Predicate<Animal> {
+		private String attribute;
+
+		public PAnimal(String attribute) {
+			this.attribute = attribute;
+		}
+		@Override
+		public boolean test(Animal t) {	
+			return attribute == t.diet.toString() || attribute == t.geneticCode.toString();
+		}
+		
+	}
+	
+	protected List<Animal> getAnimalsInRange(String attribute) { //Buscar forma de quitar strategy (Probablemente con sobrecarga en getStrategy en Wolf)
+		Predicate<Animal> PAnimal = new PAnimal(attribute);
+		List<Animal> candidates = regionMngr.getAnimalsInRange(this, PAnimal);
 		candidates.remove(this);
 		if (candidates.isEmpty()) return null;
-		return strategy.select(this, candidates);
+		return candidates;
 	}
 	
 	protected void moveAndStats(double dt, double E, double D, double speedMult) {

@@ -2,7 +2,6 @@ package simulator.model;
 
 import simulator.misc.Utils;
 import simulator.misc.Vector2D;
-import java.util.List;
 
 public class Sheep extends Animal {
 	private Animal dangerSource;
@@ -33,6 +32,7 @@ public class Sheep extends Animal {
 		case DANGER: updateDanger(dt); break;
 		case MATE: updateMate(dt); break;
 		case HUNGER: break; // Un objeto Sheep nunca puede estar en este estado
+		case DEAD: break; // Nunca esta en este estado
 		}
 		AnimalMapView regMngr = getRegionManager();
 		if (outOfMap()) {
@@ -54,7 +54,7 @@ public class Sheep extends Animal {
 		if (getPosition().distanceTo(getDestination()) < 8.0) 
 			setPosition(Vector2D.getRandomVector2(0.0, getRegionManager().getWidth(), getRegionManager().getHeight()));
 		if (dangerSource == null)
-			dangerSource = findTarget("diet", Diet.CARNIVORE.toString(), dangerStrategy);
+			dangerSource = this.dangerStrategy.select(this, getAnimalsInRange(Diet.CARNIVORE.toString()));
 		if (dangerSource != null)
 			setState(State.DANGER);
 		else if (getDesire() > DESIRE_THRESHOLD)
@@ -71,7 +71,7 @@ public class Sheep extends Animal {
 			moveAndStats(dt, -20.0 * dt * 1.2, 40.0 * dt, 2.0);
 		}
 		if (dangerSource == null || getPosition().distanceTo(dangerSource.getPosition()) > getSightRange())
-			dangerSource = findTarget("diet", Diet.CARNIVORE.toString(), dangerStrategy);
+			dangerSource = this.dangerStrategy.select(this, getAnimalsInRange(Diet.CARNIVORE.toString()));
 		if (dangerSource == null)
 			setState(getDesire() < DESIRE_THRESHOLD ? State.NORMAL : State.MATE);
 	}
@@ -80,7 +80,7 @@ public class Sheep extends Animal {
 		if (mateTarget != null && (mateTarget.getState() == State.DEAD) || getPosition().distanceTo(mateTarget.getPosition()) > getSightRange())
 			setMateTarget(null);
 		if (getMateTarget() == null) {
-			setMateTarget(findTarget("gcode", getGeneticCode(), getMateStrategy()));
+			setMateTarget(getMateStrategy().select(this, getAnimalsInRange(Diet.CARNIVORE.toString())));
 			if (getMateTarget() == null)
 				updateNormal(dt);
 		}
@@ -95,7 +95,7 @@ public class Sheep extends Animal {
 				setMateTarget(null);
 			}
 		}
-		dangerSource = findTarget("diet", Diet.CARNIVORE.toString(), dangerStrategy);
+		dangerSource = this.dangerStrategy.select(this, getAnimalsInRange(Diet.CARNIVORE.toString()));
 		if (dangerSource != null)
 			setState(State.DANGER);
 		else if (getDesire() < DESIRE_THRESHOLD)

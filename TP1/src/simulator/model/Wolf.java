@@ -32,6 +32,7 @@ public class Wolf extends Animal {
 			case DANGER: break; // Un objeto Wolf nunca puede estar en este estado
 			case MATE: updateMate(dt); break;
 			case HUNGER: updateHunger(dt); break; 
+			case DEAD: break; //Nunca esta en este estado
 			}
 			AnimalMapView regMngr = getRegionManager();
 			if (outOfMap()) {
@@ -64,7 +65,7 @@ public class Wolf extends Animal {
 		if (mateTarget != null && (mateTarget.getState() == State.DEAD) || getPosition().distanceTo(mateTarget.getPosition()) > getSightRange())
 			setMateTarget(null);
 		if (getMateTarget() == null) {
-			setMateTarget(findTarget("gcode", getGeneticCode(), getMateStrategy()));
+			setMateTarget(this.getMateStrategy().select(this, getAnimalsInRange(getGeneticCode())));
 			if (getMateTarget() == null)
 				updateNormal(dt);
 		}
@@ -82,7 +83,22 @@ public class Wolf extends Animal {
 	}
 	
 	private void updateHunger(double dt) {
-		
+		if (huntTarget == null || huntTarget.getState() == State.DEAD) 
+			huntTarget = this.huntingStrategy.select(this, getAnimalsInRange(Diet.HERBIVORE.toString()));
+		if(huntTarget == null) updateNormal(dt);
+		else {
+			setDestination(huntTarget.getPosition());
+			moveAndStats(dt, -18.0 * dt * 1.2, 30.0 * dt, 3.0);
+			if (getPosition().distanceTo(huntTarget.getPosition()) < 8.0) {
+				huntTarget.setState(State.DEAD);
+				huntTarget = null;
+				addEnergy(50.0);
+				}
+			if(getEnergy() > ENERGY_THRESHOLD) {
+				if(getDesire() < DESIRE_THRESHOLD) setState(State.NORMAL);
+				else setState(State.MATE);
+			}
+		}
 	}
 		
 

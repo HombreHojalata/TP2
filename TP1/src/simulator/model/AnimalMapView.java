@@ -1,13 +1,7 @@
 package simulator.model;
 
 import java.util.List;
-
-import simulator.misc.Vector2D;
-
-public interface AnimalMapView {
-	public double getWidth();
-	public double getHeight();
-	public double getFood(Animal animal, double dt);
-	
-	public List<Animal> getAnimalsInRange(Vector2D pos, double range, String attribute, String value);
+import java.util.function.Predicate;
+public interface AnimalMapView extends MapInfo, FoodSupplier {  
+	public List<Animal> getAnimalsInRange(Animal e, Predicate<Animal> pAnimal);  
 }
