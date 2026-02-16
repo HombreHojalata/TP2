@@ -8,31 +8,18 @@ import org.json.JSONObject;
 
 public abstract class Region implements FoodSupplier, RegionInfo, Entity {
 
-	protected List<Animal> Animals;
+	protected List<Animal> animals;
 	
-	public Region() {Animals = new ArrayList<Animal>(); }
-	@Override
-	public void update(double dt) {
-		for (Animal a : Animals) {
-			a.update(dt);
-		}
-	}
-	final void addAnimal(Animal a) {Animals.add(a);}
-	final void removeAnimal(Animal a) {Animals.remove(a);} //Deberia estar bien, pero si hay fallos revisar
-	final List<Animal> getAnimals() { return Animals;}
+	public Region() { animals = new ArrayList<Animal>(); }
 	
-	public List<Animal> getAnimalsDiet(Diet d) {
-		List<Animal> aux = new ArrayList<Animal>();
-		for (Animal a : Animals) {
-			if (a.getDiet() == d) aux.add(a);
-		}
-		return aux;
-	}
+	public final void addAnimal(Animal a) { animals.add(a); }
+	public final void removeAnimal(Animal a) { animals.remove(a); } //Deberia estar bien, pero si hay fallos revisar
+	public final List<Animal> getAnimals() { return animals; }
 	
 	public JSONObject asJSON() {
 		   JSONArray jsonArray = new JSONArray();
 
-	        for (Animal a : Animals) {
+	        for (Animal a : animals) {
 	            jsonArray.put(a.asJSON());
 	        }
 
@@ -41,4 +28,21 @@ public abstract class Region implements FoodSupplier, RegionInfo, Entity {
 
 	        return result;
 	}
+	
+	@Override
+	public void update(double dt) {
+		for (Animal a : animals) {
+			a.update(dt);
+		}
+	}
+	
+	public List<Animal> getAnimalsDiet(Diet d) {
+		List<Animal> aux = new ArrayList<Animal>();
+		for (Animal a : animals) {
+			if (a.getDiet() == d) aux.add(a);
+		}
+		return aux;
+	}
 }
+	
+	

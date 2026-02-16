@@ -165,6 +165,7 @@ public abstract class Animal implements Entity, AnimalInfo {
 		public PAnimal(String attribute) {
 			this.attribute = attribute;
 		}
+		
 		@Override
 		public boolean test(Animal t) {	
 			return attribute == t.diet.toString() || attribute == t.geneticCode.toString();
@@ -172,7 +173,7 @@ public abstract class Animal implements Entity, AnimalInfo {
 		
 	}
 	
-	protected List<Animal> getAnimalsInRange(String attribute) { //Buscar forma de quitar strategy (Probablemente con sobrecarga en getStrategy en Wolf)
+	protected List<Animal> getAnimalsInRange(String attribute) {
 		Predicate<Animal> PAnimal = new PAnimal(attribute);
 		List<Animal> candidates = regionMngr.getAnimalsInRange(this, PAnimal);
 		candidates.remove(this);

@@ -2,6 +2,8 @@ package simulator.model;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+import simulator.misc.Utils;
+
 public class DynamicSupplyRegion extends Region {
 	private double food;
 	private double factor; //Factor de crecimiento
@@ -13,18 +15,18 @@ public class DynamicSupplyRegion extends Region {
 	}
 
 	@Override
-	public double getFood(Animal a, double dt) {
+	public double getFood(AnimalInfo a, double dt) {
 		int n = getAnimalsDiet(Diet.HERBIVORE).size();
-		if (a.getDiet() == Diet.CARNIVORE) return 0.0;
-		else if(a.getDiet() == Diet.HERBIVORE) {
-			double d = 60.0*Math.exp(-Math.max(0,n-5.0)*2.0)*dt;
-			food =- d;
+		if (a.getDiet() == Diet.HERBIVORE) {
+			double d = Math.min(food, 60.0 * Math.exp(-Math.max(0, n - 5.0) * 2.0) * dt);
+			food -= d;
 			return d;
 		}
-		else return 0.0;
+		return 0.0;
 	}
+	
 	@Override
 	public void update(double dt) {
-		if (ThreadLocalRandom.current().nextDouble() < 0.5) food =+ factor*dt;
-		}
+		if (Utils.RAND.nextDouble() < 0.5) food += factor*dt; // TODO: Igual hay que hacer funcionamiento de update normal
+	}
 }
