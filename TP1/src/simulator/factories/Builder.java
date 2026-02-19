@@ -39,36 +39,11 @@ public abstract class Builder<T> {
 		return desc;  
 	}
 
-	protected abstract T createInstance(JSONObject data);  
-	
-	
-	public class SelectFirstBuilder extends Builder<SelectionStrategy>{
+	protected abstract T createInstance(JSONObject data);  	
+}
 
-		public SelectFirstBuilder() {
-			super("first", "Elije el primer animal de la lista");
-		}
-
-		@Override
-		protected SelectionStrategy createInstance(JSONObject data) {
-			if (data == null) throw new IllegalArgumentException("Missing data"); 
-			if (!data.isEmpty()) throw new IllegalArgumentException("SelectFirst strategy data must be empty"); 
-			return new SelectFirst();
-		}
-	}
-	
-	public class SelectClosestBuilder extends Builder<SelectionStrategy>{
-
-		public SelectClosestBuilder() {
-			super("closest", "Elije el animal mas cercano de la lista");
-		}
-
-		@Override
-		protected SelectionStrategy createInstance(JSONObject data) {
-			if (data == null) throw new IllegalArgumentException("Missing data"); 
-			if (!data.isEmpty()) throw new IllegalArgumentException("SelectClosest strategy data must be empty"); 
-			return new SelectClosest();
-		}
-	}
+/*
+ *
 	public class SelectYoungestBuilder extends Builder<SelectionStrategy>{
 
 		public SelectYoungestBuilder() {
@@ -82,7 +57,5 @@ public abstract class Builder<T> {
 			return new SelectYoungest();
 		}
 	}
-	
-		
-	}
+ * */
 	
