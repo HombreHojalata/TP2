@@ -1,7 +1,5 @@
 package simulator.model;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import simulator.misc.Utils;
 
 public class DynamicSupplyRegion extends Region {

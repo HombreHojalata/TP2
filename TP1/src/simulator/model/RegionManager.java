@@ -8,7 +8,6 @@ import java.util.function.Predicate;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import simulator.misc.Vector2D;
 
 public class RegionManager implements AnimalMapView {
 	private int cols;
@@ -40,7 +39,7 @@ public class RegionManager implements AnimalMapView {
 			animalRegion.put(a, r);
 	}
 	
-	public void registerAnimal(Animal a) { // TODO: Esto tiene sentido... ¿no?
+	public void registerAnimal(Animal a) { // TODO: Esto tiene sentido... ï¿½no?
 		a.init(this);
 		int x = (int) a.getPosition().getX() % regWidth;
 		int y = (int) a.getPosition().getY() % regHeight;

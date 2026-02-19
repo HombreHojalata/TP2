@@ -112,7 +112,7 @@ public abstract class Animal implements Entity, AnimalInfo {
 	
 	public JSONObject asJSON() {
 		JSONObject json = new JSONObject();
-		json.put("pos", new double[]{ pos.getX(), pos.getY() });
+		json.put("pos", pos.asJSONArray());
 		json.put("gcode", geneticCode);
 		json.put("diet", diet.toString());
 		json.put("state", state.toString());
