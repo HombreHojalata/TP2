@@ -3,6 +3,11 @@ package simulator.launcher;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -13,13 +18,20 @@ import org.apache.commons.cli.ParseException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import simulator.factories.*;
+import simulator.model.Animal;
+import simulator.model.Region;
+import simulator.model.SelectionStrategy;
+import simulator.model.Simulator;
 import simulator.misc.Utils;
 
 public class Main {
-
+	
 	private enum ExecMode {
 		BATCH("batch", "Batch mode"), GUI("gui", "Graphical User Interface mode");
-
+		
+		
+		
 		private String tag;
 		private String desc;
 
@@ -36,6 +48,9 @@ public class Main {
 			return desc;
 		}
 	}
+	
+	private static Factory<Region> RegionFactory;
+	private static Factory<Animal> AnimalFactory;
 
 	// default values for some parameters
 	//
@@ -124,6 +139,19 @@ public class Main {
 	}
 
 	private static void initFactories() {
+		List<Builder<SelectionStrategy>> selectionStrategyBuilders = new ArrayList<>();  
+		selectionStrategyBuilders.add(new SelectFirstBuilder());  
+		selectionStrategyBuilders.add(new SelectClosestBuilder());  
+		Factory<SelectionStrategy> selectionStrategyFactory = new BuilderBasedFactory<SelectionStrategy>(selectionStrategyBuilders);
+		List<Builder<Animal>> AnimalBuilders = new ArrayList<>();
+		AnimalBuilders.add(new SheepBuilder(selectionStrategyFactory));
+		AnimalBuilders.add(new WolfBuilder(selectionStrategyFactory));
+		AnimalFactory = new BuilderBasedFactory<Animal>(AnimalBuilders);
+		List<Builder<Region>> RegionBuilders = new ArrayList<>();
+		RegionBuilders.add(new DefaultRegionBuilder());
+		RegionBuilders.add(new DynamicSupplyRegionBuilder());
+		RegionFactory = new BuilderBasedFactory<Region>(RegionBuilders);
+		
 	}
 
 	private static JSONObject loadJSONFile(InputStream in) {
@@ -133,6 +161,11 @@ public class Main {
 
 	private static void startBatchMode() throws Exception {
 		InputStream is = new FileInputStream(new File(inFile));
+		String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+		JSONObject obj = new JSONObject(jsonText);
+		OutputStream out;
+		Simulator sim = new Simulator(obj.getInt("w"), 0, 0, 0, AnimalFactory, RegionFactory); 
+		
 	}
 
 	private static void startGUIMode() throws Exception {

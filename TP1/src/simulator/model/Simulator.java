@@ -1,0 +1,74 @@
+package simulator.model;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.json.JSONObject;
+
+import simulator.factories.Factory;
+
+public class Simulator implements JSONable {
+	private Factory<Animal> animalsFactory;
+	private Factory<Region> regionsFactory;
+	private RegionManager regionManager;
+	private List<Animal> animals;
+	private double time;
+
+	public Simulator(int cols, int rows, int width, int height,   
+            Factory<Animal> animalsFactory, Factory<Region> regionsFactory) {
+		this.animalsFactory = animalsFactory;
+		this.regionsFactory = regionsFactory;
+		regionManager = new RegionManager(cols, rows, width, height);
+		animals = new ArrayList<>();
+		time = 0.0;
+	}
+	private void setRegion(int row, int col, Region r) {
+		regionManager.setRegion(row, col, r);
+	}
+	
+	public void setRegion(int row, int col, JSONObject rJson) {
+		Region r = regionsFactory.createInstance(rJson);
+		setRegion(row, col, r);
+	}
+	
+	private void setAnimal(Animal a) {
+		animals.add(a);
+		regionManager.registerAnimal(a);
+	}
+	public void addAnimal(JSONObject aJson) {
+		Animal a = this.animalsFactory.createInstance(aJson);
+		setAnimal(a);
+	}
+	
+	public void advance(double dt) {
+		time += dt;
+		for (Animal a : animals) {
+			if (a.getState() == State.DEAD) {
+				this.regionManager.unregisterAnimal(a);
+				animals.remove(a);
+			}
+		}
+		for (Animal a : animals) {
+			a.update(dt);
+		}
+		regionManager.updateAllRegions(dt);
+		
+		for (Animal a : animals) {
+			if (a.isPregnant()) {
+				Animal aux = a.deliverBaby();
+				setAnimal(aux);
+			}
+		}
+	}
+	
+	public MapInfo getMapInfo() {return regionManager;}	
+	public List<? extends AnimalInfo> getAnimals() { return Collections.unmodifiableList(animals);}
+	public double getTime() {return time;}
+	public JSONObject asJSON() {
+		JSONObject obj = new JSONObject();
+		obj.put("time", time);
+		obj.put("state", regionManager.asJSON());	
+		return obj;
+	}
+	
+}
