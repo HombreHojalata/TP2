@@ -18,6 +18,7 @@ import org.apache.commons.cli.ParseException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import simulator.control.Controller;
 import simulator.factories.*;
 import simulator.model.Animal;
 import simulator.model.Region;
@@ -59,6 +60,8 @@ public class Main {
 	// some attributes to stores values corresponding to command-line parameters
 	//
 	private static Double time = null;
+	private static Double dt = null;
+	private static boolean sv = false;
 	private static String inFile = null;
 	private static ExecMode mode = ExecMode.BATCH;
 
@@ -161,10 +164,12 @@ public class Main {
 
 	private static void startBatchMode() throws Exception {
 		InputStream is = new FileInputStream(new File(inFile));
-		String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-		JSONObject obj = new JSONObject(jsonText);
-		OutputStream out;
-		Simulator sim = new Simulator(obj.getInt("w"), 0, 0, 0, AnimalFactory, RegionFactory); 
+		JSONObject obj = loadJSONFile(is);
+		OutputStream out = null;
+		Simulator sim = new Simulator(obj.getInt("c"), obj.getInt("r"), obj.getInt("w"), obj.getInt("h"), AnimalFactory, RegionFactory); 
+		Controller cont = new Controller(sim);
+		cont.loadData(obj);
+		cont.run(time, dt, sv, out);
 		
 	}
 
