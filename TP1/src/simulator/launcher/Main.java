@@ -2,6 +2,7 @@ package simulator.launcher;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -31,8 +32,6 @@ public class Main {
 	private enum ExecMode {
 		BATCH("batch", "Batch mode"), GUI("gui", "Graphical User Interface mode");
 		
-		
-		
 		private String tag;
 		private String desc;
 
@@ -50,8 +49,8 @@ public class Main {
 		}
 	}
 	
-	private static Factory<Region> RegionFactory;
-	private static Factory<Animal> AnimalFactory;
+	private static Factory<Region> regionFactory;
+	private static Factory<Animal> animalFactory;
 
 	// default values for some parameters
 	//
@@ -59,10 +58,11 @@ public class Main {
 
 	// some attributes to stores values corresponding to command-line parameters
 	//
-	private static Double time = null;
-	private static Double dt = null;
-	private static boolean sv = false;
-	private static String inFile = null;
+	private static Double time = 60.0; // TODO: Cambiar para meterlo luego
+	private static Double dt = 0.03; // TODO: Cambiar para meterlo luego
+	private static boolean sv = true; // TODO: Cambiar para meterlo luego
+	private static String inFile = "ex1.json";
+	private static String outFile = null;
 	private static ExecMode mode = ExecMode.BATCH;
 
 	private static void parseArgs(String[] args) {
@@ -144,16 +144,17 @@ public class Main {
 	private static void initFactories() {
 		List<Builder<SelectionStrategy>> selectionStrategyBuilders = new ArrayList<>();  
 		selectionStrategyBuilders.add(new SelectFirstBuilder());  
-		selectionStrategyBuilders.add(new SelectClosestBuilder());  
+		selectionStrategyBuilders.add(new SelectClosestBuilder());
+		selectionStrategyBuilders.add(new SelectYoungestBuilder());
 		Factory<SelectionStrategy> selectionStrategyFactory = new BuilderBasedFactory<SelectionStrategy>(selectionStrategyBuilders);
-		List<Builder<Animal>> AnimalBuilders = new ArrayList<>();
-		AnimalBuilders.add(new SheepBuilder(selectionStrategyFactory));
-		AnimalBuilders.add(new WolfBuilder(selectionStrategyFactory));
-		AnimalFactory = new BuilderBasedFactory<Animal>(AnimalBuilders);
-		List<Builder<Region>> RegionBuilders = new ArrayList<>();
-		RegionBuilders.add(new DefaultRegionBuilder());
-		RegionBuilders.add(new DynamicSupplyRegionBuilder());
-		RegionFactory = new BuilderBasedFactory<Region>(RegionBuilders);
+		List<Builder<Animal>> animalBuilders = new ArrayList<>();
+		animalBuilders.add(new SheepBuilder(selectionStrategyFactory));
+		animalBuilders.add(new WolfBuilder(selectionStrategyFactory));
+		animalFactory = new BuilderBasedFactory<Animal>(animalBuilders);
+		List<Builder<Region>> regionBuilders = new ArrayList<>();
+		regionBuilders.add(new DefaultRegionBuilder());
+		regionBuilders.add(new DynamicSupplyRegionBuilder());
+		regionFactory = new BuilderBasedFactory<Region>(regionBuilders);
 		
 	}
 
@@ -165,12 +166,12 @@ public class Main {
 	private static void startBatchMode() throws Exception {
 		InputStream is = new FileInputStream(new File(inFile));
 		JSONObject obj = loadJSONFile(is);
-		OutputStream out = null;
-		Simulator sim = new Simulator(obj.getInt("c"), obj.getInt("r"), obj.getInt("w"), obj.getInt("h"), AnimalFactory, RegionFactory); 
+		OutputStream out = outFile == null ? System.out : new FileOutputStream(new File(outFile));
+		Simulator sim = new Simulator(obj.getInt("cols"), obj.getInt("rows"), obj.getInt("width"), obj.getInt("height"), animalFactory, regionFactory); 
 		Controller cont = new Controller(sim);
 		cont.loadData(obj);
 		cont.run(time, dt, sv, out);
-		
+		out.close();
 	}
 
 	private static void startGUIMode() throws Exception {

@@ -14,7 +14,7 @@ public class Wolf extends Animal {
 	
 	
 	public Wolf(SelectionStrategy mateStrategy, SelectionStrategy huntingStrategy, Vector2D pos) {
-		super("Wolf", Diet.CARNIVORE, INIT_SIGHT_RANGE, INIT_SPEED, huntingStrategy, pos);
+		super("wolf", Diet.CARNIVORE, INIT_SIGHT_RANGE, INIT_SPEED, huntingStrategy, pos);
 		if (huntingStrategy == null) throw new IllegalArgumentException("Hunting stratergy cannot be null");
 		this.huntingStrategy = huntingStrategy;
 		huntTarget = null;
@@ -62,7 +62,7 @@ public class Wolf extends Animal {
 	
 	private void updateMate(double dt) {
 		Animal mateTarget = getMateTarget();
-		if (mateTarget != null && (mateTarget.getState() == State.DEAD) || getPosition().distanceTo(mateTarget.getPosition()) > getSightRange())
+		if (mateTarget != null && (mateTarget.getState() == State.DEAD || getPosition().distanceTo(mateTarget.getPosition()) > getSightRange()))
 			setMateTarget(null);
 		if (getMateTarget() == null) {
 			setMateTarget(this.getMateStrategy().select(this, getAnimalsInRange(getGeneticCode())));

@@ -33,19 +33,19 @@ public class BuilderBasedFactory<T> implements Factory<T> {
 	public T createInstance(JSONObject info) {  
 		T T = null;
 		if (info == null) {  
-			throw new IllegalArgumentException("’info’ cannot be null");  
+			throw new IllegalArgumentException("'info' cannot be null");  
 		}
-		if (!info.has("type") || info.getString("type").isEmpty()) throw new IllegalArgumentException("’info’ needs a type that can't be empty");
+		if (!info.has("type") || info.getString("type").isEmpty()) throw new IllegalArgumentException("'info' needs a type that can't be empty");
 		
 		for (String s : builders.keySet()) {
-			if (s == info.getString("type")) {
+			if (s.equals(info.getString("type"))) {
 				JSONObject obj =  info.has("data") ? info.getJSONObject("data") : new JSONObject();
 				 T = builders.get(s).createInstance(obj);
 			}
 		}
 		
 		if (T != null) return T;
-		else throw new IllegalArgumentException("Unrecognized ‘info’:" + info.toString());  
+		else throw new IllegalArgumentException("Unrecognized 'info':" + info.toString());  
 	}
 
 	@Override  

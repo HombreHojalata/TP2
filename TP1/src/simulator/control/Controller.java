@@ -49,13 +49,13 @@ public class Controller {
 	public void run(double t, double dt, boolean sv, OutputStream out) throws IOException { // TODO: Comprobar que escriba el JSON correctamente
 		JSONObject obj = new JSONObject();
 		obj.put("in", sim.asJSON());
-		while (sim.getTime() > t) {
-			SimpleObjectViewer view = null;  
-			if (sv) {  
+		SimpleObjectViewer view = null; 
+		if (sv) {  
 			   MapInfo m = sim.getMapInfo();  
 			   view = new SimpleObjectViewer("[ECOSYSTEM]", m.getWidth(), m.getHeight(), m.getCols(), m.getRows());  
 			   view.update(toAnimalsInfo(sim.getAnimals()), sim.getTime(), dt); 
 			}
+		while (sim.getTime() < t) {
 			sim.advance(dt);
 			if (sv) view.update(toAnimalsInfo(sim.getAnimals()), sim.getTime(), dt);
 		}

@@ -4,12 +4,11 @@ import java.util.List;
 
 public class SelectFirst implements SelectionStrategy {
 
-	public SelectFirst() {
-
-	}
+	public SelectFirst() {}
 
 	@Override
 	public Animal select(Animal a, List<Animal> as) {
+		if (as == null) return null;
 		return as.getFirst();
 	}
 

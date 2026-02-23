@@ -12,7 +12,7 @@ public class Sheep extends Animal {
 	private static final double DESIRE_THRESHOLD = 65.0;
 	
 	public Sheep(SelectionStrategy mateStrategy, SelectionStrategy dangerStrategy, Vector2D pos) {
-		super("Sheep", Diet.HERBIVORE, INIT_SIGHT_RANGE, INIT_SPEED, mateStrategy, pos);
+		super("sheep", Diet.HERBIVORE, INIT_SIGHT_RANGE, INIT_SPEED, mateStrategy, pos);
 		if (dangerStrategy == null) throw new IllegalArgumentException("Danger stratergy cannot be null");
 		this.dangerStrategy = dangerStrategy;
 		this.dangerSource = null;
@@ -77,7 +77,7 @@ public class Sheep extends Animal {
 	}
 	private void updateMate(double dt) {
 		Animal mateTarget = getMateTarget();
-		if (mateTarget != null && (mateTarget.getState() == State.DEAD) || getPosition().distanceTo(mateTarget.getPosition()) > getSightRange())
+		if (mateTarget != null && (mateTarget.getState() == State.DEAD || getPosition().distanceTo(mateTarget.getPosition()) > getSightRange()))
 			setMateTarget(null);
 		if (getMateTarget() == null) {
 			setMateTarget(getMateStrategy().select(this, getAnimalsInRange(Diet.CARNIVORE.toString())));

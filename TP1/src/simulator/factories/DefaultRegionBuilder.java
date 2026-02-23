@@ -16,5 +16,5 @@ public class DefaultRegionBuilder extends Builder<Region> {
 		if (data == null) throw new IllegalArgumentException("Missing data"); 
 		if (!data.isEmpty()) throw new IllegalArgumentException("DefaultRegion strategy data must be empty");
 		return new DefaultRegion();
-		}
+	}
 }

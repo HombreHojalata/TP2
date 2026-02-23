@@ -22,6 +22,7 @@ public class Simulator implements JSONable {
 		animals = new ArrayList<>();
 		time = 0.0;
 	}
+	
 	private void setRegion(int row, int col, Region r) {
 		regionManager.setRegion(row, col, r);
 	}
@@ -42,28 +43,35 @@ public class Simulator implements JSONable {
 	
 	public void advance(double dt) {
 		time += dt;
+		List<Animal> dead = new ArrayList<>();
 		for (Animal a : animals) {
-			if (a.getState() == State.DEAD) {
-				this.regionManager.unregisterAnimal(a);
-				animals.remove(a);
-			}
+			if (a.getState() == State.DEAD)
+				dead.add(a);
 		}
-		for (Animal a : animals) {
+		for (Animal d : dead) {
+			this.regionManager.unregisterAnimal(d);
+			animals.remove(d);
+		}
+		dead.clear();
+		
+		
+		for (Animal a : animals)
 			a.update(dt);
-		}
 		regionManager.updateAllRegions(dt);
 		
+		List<Animal> babys = new ArrayList<>();
 		for (Animal a : animals) {
-			if (a.isPregnant()) {
-				Animal aux = a.deliverBaby();
-				setAnimal(aux);
-			}
+			if (a.isPregnant())
+				babys.add(a.deliverBaby());
 		}
+		for (Animal b : babys)
+			setAnimal(b);
+		babys.clear();
 	}
 	
 	public MapInfo getMapInfo() {return regionManager;}	
 	public List<? extends AnimalInfo> getAnimals() { return Collections.unmodifiableList(animals);}
-	public double getTime() {return time;}
+	public double getTime() { return time; }
 	public JSONObject asJSON() {
 		JSONObject obj = new JSONObject();
 		obj.put("time", time);

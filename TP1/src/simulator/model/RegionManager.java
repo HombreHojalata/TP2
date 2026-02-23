@@ -39,26 +39,26 @@ public class RegionManager implements AnimalMapView {
 			animalRegion.put(a, r);
 	}
 	
-	public void registerAnimal(Animal a) { // TODO: Esto tiene sentido... �no?
+	public void registerAnimal(Animal a) { // TODO: Esto tiene sentido... no?
 		a.init(this);
-		int x = (int) a.getPosition().getX() % regWidth;
-		int y = (int) a.getPosition().getY() % regHeight;
+		int x = (int) a.getPosition().getX() / regWidth;
+		int y = (int) a.getPosition().getY() / regHeight;
 
 		regions[x][y].addAnimal(a);
 		animalRegion.put(a, regions[x][y]);
 	}
 	
 	public void unregisterAnimal(Animal a) {
-		int x = (int) a.getPosition().getX() % regWidth;
-		int y = (int) a.getPosition().getY() % regHeight;
+		int x = (int) a.getPosition().getX() / regWidth;
+		int y = (int) a.getPosition().getY() / regHeight;
 
 		regions[x][y].removeAnimal(a);
 		animalRegion.remove(a);
 	}
 	
 	public void updateAnimalRegion(Animal a) {
-		int x = (int) a.getPosition().getX() % regWidth;
-		int y = (int) a.getPosition().getY() % regHeight;
+		int x = (int) a.getPosition().getX() / regWidth;
+		int y = (int) a.getPosition().getY() / regHeight;
 		
 		if (regions[x][y] != animalRegion.get(a)) {
 			animalRegion.get(a).removeAnimal(a);
@@ -80,10 +80,10 @@ public class RegionManager implements AnimalMapView {
 	@Override
 	public List<Animal> getAnimalsInRange(Animal a, Predicate<Animal> pAnimal) { // TODO: Rehacer
 		List<Animal> list = new ArrayList<>();
-		int maxW = (int) a.getSightRange() % regWidth;
-		int maxH = (int) a.getSightRange() % regHeight;
-		int x = (int) a.getPosition().getX() % regWidth;
-		int y = (int) a.getPosition().getY() % regHeight;
+		int maxW = (int) a.getSightRange() / regWidth;
+		int maxH = (int) a.getSightRange() / regHeight;
+		int x = (int) a.getPosition().getX() / regWidth;
+		int y = (int) a.getPosition().getY() / regHeight;
 		
 		for (int i = x - maxW; i < maxW + x; i++)
 			for (int j = y - maxH; j < maxH + y; j++)
