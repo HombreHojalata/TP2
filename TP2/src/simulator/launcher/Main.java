@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,14 +54,15 @@ public class Main {
 	// default values for some parameters
 	//
 	private final static Double DEFAULT_TIME = 10.0; // in seconds
+	private final static Double DEFAULT_DT = 0.03; 
 
 	// some attributes to stores values corresponding to command-line parameters
 	//
-	private static Double time = 60.0; // TODO: Cambiar para meterlo luego
-	private static Double dt = 0.03; // TODO: Cambiar para meterlo luego
-	private static boolean sv = true; // TODO: Cambiar para meterlo luego
-	private static String inFile = "ex1.json";
-	private static String outFile = null;
+	private static Double time = DEFAULT_TIME;
+	private static Double dt = DEFAULT_DT;
+	private static boolean sv = false;
+	private static String inFile;
+	private static String outFile;
 	private static ExecMode mode = ExecMode.BATCH;
 
 	private static void parseArgs(String[] args) {
@@ -78,7 +78,11 @@ public class Main {
 			CommandLine line = parser.parse(cmdLineOptions, args);
 			parseHelpOption(line, cmdLineOptions);
 			parseInFileOption(line);
+			parseOutFileOption(line);
 			parseTimeOption(line);
+			parseDeltaTimeOption(line);
+			parseSimpleViewerOption(line);
+			
 
 			// if there are some remaining arguments, then something wrong is
 			// provided in the command line!
@@ -107,11 +111,23 @@ public class Main {
 		// input file
 		cmdLineOptions.addOption(Option.builder("i").longOpt("input").hasArg().desc("A configuration file.").build());
 
+		// output file
+		cmdLineOptions.addOption(Option.builder("o").longOpt("output").hasArg().desc(" Output file, where output is written.").build());
+		
 		// steps
+		
+		//Time
 		cmdLineOptions.addOption(Option.builder("t").longOpt("time").hasArg()
 				.desc("A real number representing the total simulation time in seconds. Default value: "
 						+ DEFAULT_TIME + ".")
 				.build());
+		//Delta time //TODO: PONER la Constante
+		cmdLineOptions.addOption(Option.builder("dt").longOpt("delta time").hasArg()
+				.desc(" A double representing actual time, in  \n"+ "seconds, per simulation step. Default value: 0.03")
+				.build());
+		//Simple viewer
+		cmdLineOptions.addOption(Option.builder("sv").longOpt("simple viewer")
+				.desc("Show the viewer window in console mode.").build());
 
 		return cmdLineOptions;
 	}
@@ -140,6 +156,30 @@ public class Main {
 			throw new ParseException("Invalid value for time: " + t);
 		}
 	}
+	
+	private static void parseDeltaTimeOption(CommandLine line) throws ParseException {
+		String t = line.getOptionValue("dt", "0.03");
+		try {
+			dt = Double.parseDouble(t);
+			assert (dt >= 0);
+		} catch (Exception e) {
+			throw new ParseException("Invalid value for  delta time: " +  t);
+		}
+	}
+	
+	private static void parseSimpleViewerOption(CommandLine line) {
+		if (line.hasOption("sv")) {
+			sv = true;
+		}
+	}
+	
+	private static void parseOutFileOption(CommandLine line) throws ParseException {
+		outFile = line.getOptionValue("o");	
+		if (outFile == null) {
+			throw new ParseException("Output file is required");
+		}
+	}
+
 
 	private static void initFactories() {
 		List<Builder<SelectionStrategy>> selectionStrategyBuilders = new ArrayList<>();  

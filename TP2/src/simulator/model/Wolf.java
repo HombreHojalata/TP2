@@ -4,17 +4,26 @@ import simulator.misc.Vector2D;
 import simulator.misc.Utils;
 
 public class Wolf extends Animal {
+	final static String WOLF_GENETIC_CODE = "Wolf";
+	final static double INIT_SIGHT_WOLF = 50.0;
+	final static double INIT_SPEED_WOLF = 60.0;
+	final static double BOOST_FACTOR_WOLF = 3.0;
+	final static double MAX_AGE_WOLF = 14.0;
+	final static double FOOD_THRESHOLD_WOLF = 50.0;
+	final static double FOOD_DROP_BOOST_FACTOR_WOLF = 1.2;
+	final static double FOOD_DROP_RATE_WOLF = 18.0;
+	final static double FOOD_DROP_DESIRE_WOLF = 10.0;
+	final static double FOOD_EAT_VALUE_WOLF = 50.0;
+	final static double DESIRE_THRESHOLD_WOLF = 65.0;
+	final static double DESIRE_INCREASE_RATE_WOLF = 30.0;
+	final static double PREGNANT_PROBABILITY_WOLF = 0.75;
+	
 	private Animal huntTarget;
 	private SelectionStrategy huntingStrategy;
 	
-	private static final double INIT_SIGHT_RANGE = 50.0;
-	private static final double INIT_SPEED = 60.0;
-	private static final double DESIRE_THRESHOLD = 65.0;
-	private static final double ENERGY_THRESHOLD = 50.0;
-	
 	
 	public Wolf(SelectionStrategy mateStrategy, SelectionStrategy huntingStrategy, Vector2D pos) {
-		super("wolf", Diet.CARNIVORE, INIT_SIGHT_RANGE, INIT_SPEED, huntingStrategy, pos);
+		super(WOLF_GENETIC_CODE, Diet.CARNIVORE, INIT_SIGHT_WOLF, INIT_SPEED_WOLF, mateStrategy, pos);
 		if (huntingStrategy == null) throw new IllegalArgumentException("Hunting stratergy cannot be null");
 		this.huntingStrategy = huntingStrategy;
 		huntTarget = null;
@@ -39,7 +48,7 @@ public class Wolf extends Animal {
 				adjustPos(regMngr.getWidth(), regMngr.getHeight());
 				setState(State.NORMAL);
 			}
-			if (getEnergy() <= 0.0 || getAge() > 14.0)
+			if (getEnergy() <= 0.0 || getAge() > MAX_AGE_WOLF)
 				setState(State.DEAD);
 			if (getState() != State.DEAD) {
 				double food = regMngr.getFood(this, dt);
@@ -49,11 +58,11 @@ public class Wolf extends Animal {
 	private void updateNormal(double dt) {
 		if (getPosition().distanceTo(getDestination()) < 8.0) 
 			setPosition(randomPosition(0.00, getRegionManager().getWidth(), 0.00, getRegionManager().getHeight()));
-		moveAndStats(dt, -18.0*dt, 30.0*dt, 1.0);
-		if(getEnergy() < ENERGY_THRESHOLD) {
+		moveAndStats(dt, -FOOD_DROP_RATE_WOLF * dt, DESIRE_INCREASE_RATE_WOLF * dt, 1); // De normal el lobo no es más rápido
+		if (getEnergy() < FOOD_THRESHOLD_WOLF) {
 			setState(State.HUNGER);
 		}
-		if(getDesire() > DESIRE_THRESHOLD) {
+		else if (getDesire() > DESIRE_THRESHOLD_WOLF) {
 			setState(State.MATE);
 		}
 	}
@@ -69,12 +78,14 @@ public class Wolf extends Animal {
 		}
 		if (getMateTarget() != null) {
 			setDestination(getMateTarget().getPosition());
-			moveAndStats(dt, -18.0 * dt * 1.2, 30.0 * dt, 3.0);
+			moveAndStats(dt, -18.0 * dt * FOOD_DROP_BOOST_FACTOR_WOLF, DESIRE_INCREASE_RATE_WOLF * dt, BOOST_FACTOR_WOLF);
 			if (getPosition().distanceTo(getMateTarget().getPosition()) < 8.0) {
 				setDesire(0.0);
 				getMateTarget().setDesire(0.0);
-				if (!isPregnant() && Utils.RAND.nextDouble() < 0.9)
+				if (!isPregnant() && Utils.RAND.nextDouble() < PREGNANT_PROBABILITY_WOLF ) {
 					this.setBaby(new Wolf(this, getMateTarget()));
+					this.addEnergy(-FOOD_DROP_DESIRE_WOLF);
+				}
 				setMateTarget(null);
 			}
 		}
@@ -86,14 +97,14 @@ public class Wolf extends Animal {
 		if(huntTarget == null) updateNormal(dt);
 		else {
 			setDestination(huntTarget.getPosition());
-			moveAndStats(dt, -18.0 * dt * 1.2, 30.0 * dt, 3.0);
+			moveAndStats(dt, -FOOD_DROP_RATE_WOLF * dt * FOOD_DROP_BOOST_FACTOR_WOLF, DESIRE_INCREASE_RATE_WOLF * dt, BOOST_FACTOR_WOLF);
 			if (getPosition().distanceTo(huntTarget.getPosition()) < 8.0) {
 				huntTarget.setState(State.DEAD);
 				huntTarget = null;
-				addEnergy(50.0);
+				addEnergy(FOOD_EAT_VALUE_WOLF);
 				}
-			if(getEnergy() > ENERGY_THRESHOLD) {
-				if(getDesire() < DESIRE_THRESHOLD) setState(State.NORMAL);
+			if(getEnergy() > FOOD_THRESHOLD_WOLF) {
+				if(getDesire() < DESIRE_THRESHOLD_WOLF) setState(State.NORMAL);
 				else setState(State.MATE);
 			}
 		}
@@ -108,7 +119,7 @@ public class Wolf extends Animal {
 	@Override
 	protected void setHungerStateAction() { setMateTarget(null);}
 	@Override
-	protected void setDangerStateAction() {/***/}
+	protected void setDangerStateAction() {/**/}
 	@Override
 	protected void setDeadStateAction() {huntTarget = null; setMateTarget(null);}
 }

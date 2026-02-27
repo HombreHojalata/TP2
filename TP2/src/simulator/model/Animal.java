@@ -9,6 +9,14 @@ import simulator.misc.Utils;
 import simulator.misc.Vector2D;
 
 public abstract class Animal implements Entity, AnimalInfo {
+	final static double INIT_ENERGY = 100.0;
+	final static double MUTATION_TOLERANCE = 0.2;
+	final static double NEARBY_FACTOR = 60.0;
+	final static double COLLISION_RANGE = 8.0;
+	final static double HUNGER_DECAY_EXP_FACTOR = 0.007;
+	final static double MAX_ENERGY = 100.0;
+	final static double MAX_DESIRE = 100.0;
+	
 	private String geneticCode;
 	private Diet diet;
 	private State state;
@@ -35,10 +43,10 @@ public abstract class Animal implements Entity, AnimalInfo {
 		this.state = State.NORMAL;
 		this.pos = pos;
 		this.dest = null;
-		this.energy = 100.0;
+		this.energy = INIT_ENERGY;
 		this.speed = Utils.getRandomizedParameter(initSpeed, 0.1);
-		this.age = 0.0;
-		this.desire = 0.0;
+		this.age = 0;
+		this.desire = 0;
 		this.sightRange = sightRange;
 		this.mateTarget = null;
 		this.baby = null;
@@ -50,13 +58,13 @@ public abstract class Animal implements Entity, AnimalInfo {
 		this.geneticCode = p1.geneticCode;
 		this.diet = p1.diet;
 		this.state = State.NORMAL;
-		this.pos = p1.getPosition().plus(Vector2D.getRandomVector(-1, 1).scale(60.0 * (Utils.RAND.nextGaussian() + 1)));
+		this.pos = p1.getPosition().plus(Vector2D.getRandomVector(-1, 1).scale(NEARBY_FACTOR * (Utils.RAND.nextGaussian() + 1)));
 		this.dest = null;
 		this.energy = (p1.energy + p2.energy) / 2;
-		this.speed = Utils.getRandomizedParameter((p1.getSpeed() + p2.getSpeed()) / 2, 0.2);
-		this.age = 0.0;
-		this.desire = 0.0;
-		this.sightRange = Utils.getRandomizedParameter((p1.getSightRange() + p2.getSightRange()) / 2, 0.2);
+		this.speed = Utils.getRandomizedParameter((p1.getSpeed() + p2.getSpeed()) / 2, MUTATION_TOLERANCE);
+		this.age = 0;
+		this.desire = 0;
+		this.sightRange = Utils.getRandomizedParameter((p1.getSightRange() + p2.getSightRange()) / 2, MUTATION_TOLERANCE);
 		this.mateTarget = null;
 		this.baby = null;
 		this.regionMngr = null;
@@ -66,11 +74,11 @@ public abstract class Animal implements Entity, AnimalInfo {
 	void init(AnimalMapView regMngr) {
 		regionMngr = regMngr;
 		if (pos == null)
-			pos = randomPosition(0.00, regionMngr.getWidth(), 0.00, regionMngr.getHeight());
+			pos = randomPosition(0, regionMngr.getWidth(), 0, regionMngr.getHeight());
 		else  {
 			adjustPos(regionMngr.getWidth(), regionMngr.getHeight());
 		}
-		dest = randomPosition(0.00, regionMngr.getWidth(), 0.00, regionMngr.getHeight());
+		dest = randomPosition(0, regionMngr.getWidth(), 0, regionMngr.getHeight());
 	}
 	
 	Animal deliverBaby() {
@@ -141,16 +149,17 @@ public abstract class Animal implements Entity, AnimalInfo {
 	protected void setBaby(Animal baby) { this.baby = baby; }
 	
 	protected void setEnergy(double energy) {
-		if (energy > 100.0) this.energy = 100.0;
-		else if (energy < 0.0) this.energy = 0.0;
+		if (energy > MAX_ENERGY) this.energy = MAX_ENERGY;
+		else if (energy < 0) this.energy = 0;
 		else this.energy = energy;
 	}
 	protected void setAge(double age) {
-		if (age < 0.0) this.age = 0.0;
+		if (age < 0) this.age = 0;
 		this.age = age;
 	}
 	protected void setDesire(double desire) {
-		if (desire < 0.0) this.desire = 0.0;
+		if (desire > MAX_DESIRE) this.desire = MAX_DESIRE;
+		if (desire < 0) this.desire = 0;
 		this.desire = desire;
 	}
 	
@@ -181,7 +190,7 @@ public abstract class Animal implements Entity, AnimalInfo {
 	}
 	
 	protected void moveAndStats(double dt, double E, double D, double speedMult) {
-		double speed = getSpeed() * dt * Math.exp((getEnergy() - 100.0) * 0.007);
+		double speed = getSpeed() * dt * Math.exp((getEnergy() - MAX_ENERGY) * HUNGER_DECAY_EXP_FACTOR);
 		move(speed * speedMult);
 		addAge(dt);
 		addEnergy(E * speedMult);
@@ -198,7 +207,7 @@ public abstract class Animal implements Entity, AnimalInfo {
 		setDesire(getDesire() + amount);
 	}
 	
-	protected void adjustPos(double width, double height) { // Ajusta la posición para que no se salga del mapa
+	protected void adjustPos(double width, double height) { // Ajusta la posicion para que no se salga del mapa
 		double x = this.pos.getX();
 		double y = this.pos.getY();
 		

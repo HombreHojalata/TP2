@@ -77,8 +77,7 @@ public class RegionManager implements AnimalMapView {
 				regions[i][j].update(dt);
 	}
 	
-	@Override
-	public List<Animal> getAnimalsInRange(Animal a, Predicate<Animal> filter) { // TODO: Rehacer
+	public List<Animal> getAnimalsInRangeOtro(Animal a, Predicate<Animal> filter) { // TODO: Rehacer
 		List<Animal> list = new ArrayList<>();
 		int rangeInCols = (int) Math.ceil(a.getSightRange() / regWidth);
 		int rangeInRows = (int) Math.ceil(a.getSightRange() / regHeight);
@@ -96,6 +95,23 @@ public class RegionManager implements AnimalMapView {
 			}
 		}
 
+		return list;
+	}
+	
+	@Override
+	public List<Animal> getAnimalsInRange(Animal a, Predicate<Animal> filter) { // TODO: Rehacer	
+		List<Animal> list = new ArrayList<>();
+		int rangeInCols = (int) Math.ceil(a.getSightRange() / regWidth);
+		int rangeInRows = (int) Math.ceil(a.getSightRange() / regHeight);
+		int centerCol = (int) a.getPosition().getX() / regWidth;
+		int centerRow = (int) a.getPosition().getY() / regHeight;
+
+		for (int i = centerCol - rangeInCols; i < centerCol + rangeInCols; i++)
+			for (int j = centerRow - rangeInRows; j < centerRow + rangeInRows; j++)
+				if (i >= 0 && i < cols && j >= 0 && j < rows) // Comprueba el out of bounds
+					for (Animal an : regions[i][j].getAnimals())
+						if (an != a && a.getPosition().distanceTo(an.getPosition()) <= a.getSightRange() && filter.test(an))
+							list.add(an);
 		return list;
 	}
 	

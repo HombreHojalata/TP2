@@ -26,5 +26,4 @@ public class DynamicSupplyRegionBuilder extends Builder<Region> {
 		fillInData(data);
 		return new DynamicSupplyRegion(factor, food);
 	}
-
 }
