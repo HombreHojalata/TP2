@@ -60,7 +60,7 @@ public abstract class Animal implements Entity, AnimalInfo {
 		this.state = State.NORMAL;
 		this.pos = p1.getPosition().plus(Vector2D.getRandomVector(-1, 1).scale(NEARBY_FACTOR * (Utils.RAND.nextGaussian() + 1)));
 		this.dest = null;
-		this.energy = (p1.energy + p2.energy) / 2;
+		this.energy = ((p1.energy + p2.energy) / 2);
 		this.speed = Utils.getRandomizedParameter((p1.getSpeed() + p2.getSpeed()) / 2, MUTATION_TOLERANCE);
 		this.age = 0;
 		this.desire = 0;
@@ -168,24 +168,8 @@ public abstract class Animal implements Entity, AnimalInfo {
 		return (x < 0 || x >= regionMngr.getWidth() || y < 0 || y >= regionMngr.getHeight());
 	}
 	
-	class PAnimal implements Predicate<Animal> {
-		private String attribute;
-
-		public PAnimal(String attribute) {
-			this.attribute = attribute;
-		}
-		
-		@Override
-		public boolean test(Animal t) {	
-			return attribute == t.diet.toString() || attribute == t.geneticCode.toString();
-		}
-		
-	}
-	
-	protected List<Animal> getAnimalsInRange(String attribute) {
-		Predicate<Animal> PAnimal = new PAnimal(attribute);
-		List<Animal> candidates = regionMngr.getAnimalsInRange(this, PAnimal);
-		if (candidates.isEmpty()) return null;
+	protected List<Animal> getAnimalsInRange(Predicate<Animal> filter) {
+		List<Animal> candidates = regionMngr.getAnimalsInRange(this, filter);
 		return candidates;
 	}
 	
@@ -207,14 +191,14 @@ public abstract class Animal implements Entity, AnimalInfo {
 		setDesire(getDesire() + amount);
 	}
 	
-	protected void adjustPos(double width, double height) { // Ajusta la posicion para que no se salga del mapa
+	protected void adjustPos(double width, double height) {
 		double x = this.pos.getX();
 		double y = this.pos.getY();
 		
-		if (x >= width) x = width - 1;
-		else if (x < 0) x = 0;
-		if (y >= height) y = height - 1;
-		else if (y < 0) y = 0;
+		while (x >= width) x = (x - width);
+	    while (x < 0) x = (x + width);
+	    while (y >= height) y = (y - height);
+	    while (y < 0) y = (y + height);
 		
 		this.pos = new Vector2D(x, y);
 	}

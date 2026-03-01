@@ -9,16 +9,16 @@ public class SelectClosest implements SelectionStrategy {
 
 	@Override
 	public Animal select(Animal a, List<Animal> as) {
-		if (as != null) {
-		double min = a.getPosition().distanceTo(as.getFirst().getPosition());
-		Animal aux = as.getFirst();
-		for (Animal an : as) {
-			if(min > a.getPosition().distanceTo(an.getPosition())) {
-				aux = an;
-				min = a.getPosition().distanceTo(an.getPosition());
+		if (!as.isEmpty()) {
+			double min = a.getPosition().distanceTo(as.getFirst().getPosition());
+			Animal aux = as.getFirst();
+			for (Animal an : as) {
+				if(min > a.getPosition().distanceTo(an.getPosition())) {
+					aux = an;
+					min = a.getPosition().distanceTo(an.getPosition());
+				}
 			}
-		}
-		return aux;
+			return aux;
 		}
 		else return null;
 	}

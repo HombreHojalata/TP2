@@ -33,93 +33,92 @@ public class Wolf extends Animal {
 		this.huntingStrategy = p1.huntingStrategy;
 		huntTarget = null;
 	}
+	
 	@Override
-		public void update(double dt) {
-			if (getState() == State.DEAD) return;
-			switch (getState()) {
-			case NORMAL: updateNormal(dt); break;
-			case DANGER: break; // Un objeto Wolf nunca puede estar en este estado
-			case MATE: updateMate(dt); break;
-			case HUNGER: updateHunger(dt); break; 
-			case DEAD: break; //Nunca esta en este estado
-			}
-			AnimalMapView regMngr = getRegionManager();
-			if (outOfMap()) {
-				adjustPos(regMngr.getWidth(), regMngr.getHeight());
-				setState(State.NORMAL);
-			}
-			if (getEnergy() <= 0.0 || getAge() > MAX_AGE_WOLF)
-				setState(State.DEAD);
-			if (getState() != State.DEAD) {
-				double food = regMngr.getFood(this, dt);
-				addEnergy(food);
-			}
+	public void update(double dt) {
+		if (getState() == State.DEAD) return;
+		switch (getState()) {
+		case NORMAL: updateNormal(dt); break;
+		case DANGER: break; // Un objeto Wolf nunca puede estar en este estado
+		case MATE: updateMate(dt); break;
+		case HUNGER: updateHunger(dt); break; 
+		case DEAD: break; // No puede llegar aquí
 		}
+		AnimalMapView regMngr = getRegionManager();
+		if (outOfMap()) {
+			adjustPos(regMngr.getWidth(), regMngr.getHeight());
+			setState(State.NORMAL);
+		}
+		if (getEnergy() <= 0 || getAge() > MAX_AGE_WOLF)
+			setState(State.DEAD);
+		if (getState() != State.DEAD) {
+			double food = regMngr.getFood(this, dt);
+			addEnergy(food);
+		}
+	}
+	
 	private void updateNormal(double dt) {
-		if (getPosition().distanceTo(getDestination()) < 8.0) 
-			setPosition(randomPosition(0.00, getRegionManager().getWidth(), 0.00, getRegionManager().getHeight()));
-		moveAndStats(dt, -FOOD_DROP_RATE_WOLF * dt, DESIRE_INCREASE_RATE_WOLF * dt, 1); // De normal el lobo no es más rápido
-		if (getEnergy() < FOOD_THRESHOLD_WOLF) {
-			setState(State.HUNGER);
+		if (getPosition().distanceTo(getDestination()) < COLLISION_RANGE)
+			setDestination(randomPosition(0, getRegionManager().getWidth(), 0, getRegionManager().getHeight()));
+		moveAndStats(dt, -1 * FOOD_DROP_RATE_WOLF * dt, DESIRE_INCREASE_RATE_WOLF * dt, 1.0);
+		if (getEnergy() < FOOD_THRESHOLD_WOLF) setState(State.HUNGER);
+		else if (getDesire() > DESIRE_THRESHOLD_WOLF) setState(State.MATE);
+	}
+	
+	private void updateHunger(double dt) {
+		if (huntTarget == null || huntTarget.getState() == State.DEAD || huntTarget.getPosition().distanceTo(getPosition()) > getSightRange())
+			huntTarget = this.huntingStrategy.select(this, getAnimalsInRange(a -> a.getDiet() == Diet.HERBIVORE && a.getState() != State.DEAD));		
+		if (huntTarget == null) {
+			if (getPosition().distanceTo(getDestination()) < COLLISION_RANGE)
+				setDestination(randomPosition(0, getRegionManager().getWidth(), 0, getRegionManager().getHeight()));
+			moveAndStats(dt, -1 * FOOD_DROP_RATE_WOLF * dt, DESIRE_INCREASE_RATE_WOLF * dt, 1.0);
 		}
-		else if (getDesire() > DESIRE_THRESHOLD_WOLF) {
-			setState(State.MATE);
+		else {
+			setDestination(huntTarget.getPosition());
+			moveAndStats(dt, -1 * FOOD_DROP_RATE_WOLF * dt * FOOD_DROP_BOOST_FACTOR_WOLF, DESIRE_INCREASE_RATE_WOLF * dt, BOOST_FACTOR_WOLF);
+			if (getPosition().distanceTo(huntTarget.getPosition()) < COLLISION_RANGE) {
+				huntTarget.setState(State.DEAD);
+				huntTarget = null;
+				addEnergy(FOOD_EAT_VALUE_WOLF);
+			}
+		}
+		if (getEnergy() > FOOD_THRESHOLD_WOLF) {
+			if (getDesire() < DESIRE_THRESHOLD_WOLF) setState(State.NORMAL);
+			else setState(State.MATE);
 		}
 	}
 	
 	private void updateMate(double dt) {
-		Animal mateTarget = getMateTarget();
-		if (mateTarget != null && (mateTarget.getState() == State.DEAD || getPosition().distanceTo(mateTarget.getPosition()) > getSightRange()))
+		if (getMateTarget() != null && (getMateTarget().getState() == State.DEAD || getPosition().distanceTo(getMateTarget().getPosition()) > getSightRange())) {
 			setMateTarget(null);
+		}
 		if (getMateTarget() == null) {
-			setMateTarget(this.getMateStrategy().select(this, getAnimalsInRange(this.getGeneticCode())));
-			if (getMateTarget() == null)
-				updateNormal(dt);
+			setMateTarget(getMateStrategy().select(this, getAnimalsInRange(a -> a.getGeneticCode().equals(getGeneticCode()) && a.getState() != State.DEAD)));
+			if (getMateTarget() == null) {
+				if (getPosition().distanceTo(getDestination()) < COLLISION_RANGE)
+					setDestination(randomPosition(0, getRegionManager().getWidth(), 0, getRegionManager().getHeight()));
+				moveAndStats(dt, -1 * FOOD_DROP_RATE_WOLF * dt, DESIRE_INCREASE_RATE_WOLF * dt, 1.0);
+			}
 		}
 		if (getMateTarget() != null) {
 			setDestination(getMateTarget().getPosition());
-			moveAndStats(dt, -18.0 * dt * FOOD_DROP_BOOST_FACTOR_WOLF, DESIRE_INCREASE_RATE_WOLF * dt, BOOST_FACTOR_WOLF);
-			if (getPosition().distanceTo(getMateTarget().getPosition()) < 8.0) {
-				setDesire(0.0);
-				getMateTarget().setDesire(0.0);
-				if (!isPregnant() && Utils.RAND.nextDouble() < PREGNANT_PROBABILITY_WOLF ) {
-					this.setBaby(new Wolf(this, getMateTarget()));
-					this.addEnergy(-FOOD_DROP_DESIRE_WOLF);
-				}
+			moveAndStats(dt, -1 * FOOD_DROP_RATE_WOLF * dt * FOOD_DROP_BOOST_FACTOR_WOLF, DESIRE_INCREASE_RATE_WOLF * dt, 3.0);
+			if (getPosition().distanceTo(getMateTarget().getPosition()) < COLLISION_RANGE) {
+				setDesire(0);
+				getMateTarget().setDesire(0);
+				if (!isPregnant() && Utils.RAND.nextDouble() < PREGNANT_PROBABILITY_WOLF)
+					setBaby(new Wolf(this, getMateTarget()));
+				addEnergy(-1 * FOOD_DROP_DESIRE_WOLF);
 				setMateTarget(null);
 			}
 		}
+		if (getEnergy() < FOOD_THRESHOLD_WOLF) setState(State.HUNGER);
+		else if (getDesire() < DESIRE_THRESHOLD_WOLF) setState(State.NORMAL);
 	}
 	
-	private void updateHunger(double dt) {
-		if (huntTarget == null || huntTarget.getState() == State.DEAD) 
-			huntTarget = this.huntingStrategy.select(this, getAnimalsInRange(Diet.HERBIVORE.toString()));
-		if(huntTarget == null) updateNormal(dt);
-		else {
-			setDestination(huntTarget.getPosition());
-			moveAndStats(dt, -FOOD_DROP_RATE_WOLF * dt * FOOD_DROP_BOOST_FACTOR_WOLF, DESIRE_INCREASE_RATE_WOLF * dt, BOOST_FACTOR_WOLF);
-			if (getPosition().distanceTo(huntTarget.getPosition()) < 8.0) {
-				huntTarget.setState(State.DEAD);
-				huntTarget = null;
-				addEnergy(FOOD_EAT_VALUE_WOLF);
-				}
-			if(getEnergy() > FOOD_THRESHOLD_WOLF) {
-				if(getDesire() < DESIRE_THRESHOLD_WOLF) setState(State.NORMAL);
-				else setState(State.MATE);
-			}
-		}
-	}
-		
-
-
-	@Override
-	protected void setNormalStateAction() {huntTarget = null; setMateTarget(null);}
-	@Override
-	protected void setMateStateAction() { huntTarget = null;}
-	@Override
-	protected void setHungerStateAction() { setMateTarget(null);}
-	@Override
-	protected void setDangerStateAction() {/**/}
-	@Override
-	protected void setDeadStateAction() {huntTarget = null; setMateTarget(null);}
+	@Override protected void setNormalStateAction() { huntTarget = null; setMateTarget(null); }
+	@Override protected void setMateStateAction() { huntTarget = null; }
+	@Override protected void setHungerStateAction() { setMateTarget(null); }
+	@Override protected void setDangerStateAction() {/**/}
+	@Override protected void setDeadStateAction() { huntTarget = null; setMateTarget(null); }
 }

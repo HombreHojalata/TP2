@@ -14,8 +14,7 @@ public class Simulator implements JSONable {
 	private List<Animal> animals;
 	private double time;
 
-	public Simulator(int cols, int rows, int width, int height,   
-            Factory<Animal> animalsFactory, Factory<Region> regionsFactory) {
+	public Simulator(int cols, int rows, int width, int height, Factory<Animal> animalsFactory, Factory<Region> regionsFactory) {
 		this.animalsFactory = animalsFactory;
 		this.regionsFactory = regionsFactory;
 		regionManager = new RegionManager(cols, rows, width, height);
@@ -32,31 +31,28 @@ public class Simulator implements JSONable {
 		setRegion(row, col, r);
 	}
 	
-	private void setAnimal(Animal a) {
+	private void addAnimal(Animal a) {
 		animals.add(a);
 		regionManager.registerAnimal(a);
 	}
 	public void addAnimal(JSONObject aJson) {
 		Animal a = this.animalsFactory.createInstance(aJson);
-		setAnimal(a);
+		addAnimal(a);
 	}
 	
 	public void advance(double dt) {
 		time += dt;
-		List<Animal> dead = new ArrayList<>();
-		for (Animal a : animals) {
-			if (a.getState() == State.DEAD)
-				dead.add(a);
-		}
+		List<Animal> dead = this.animals.stream().filter(a -> a.getState() == State.DEAD).toList(); 
 		for (Animal d : dead) {
 			this.regionManager.unregisterAnimal(d);
 			animals.remove(d);
-		}
-		dead.clear();
+		}	
 		
-		
-		for (Animal a : animals)
+		for (Animal a : animals) {
 			a.update(dt);
+			regionManager.updateAnimalRegion(a);
+		}
+		
 		regionManager.updateAllRegions(dt);
 		
 		List<Animal> babys = new ArrayList<>();
@@ -65,8 +61,7 @@ public class Simulator implements JSONable {
 				babys.add(a.deliverBaby());
 		}
 		for (Animal b : babys)
-			setAnimal(b);
-		babys.clear();
+			addAnimal(b);
 	}
 	
 	public MapInfo getMapInfo() {return regionManager;}	

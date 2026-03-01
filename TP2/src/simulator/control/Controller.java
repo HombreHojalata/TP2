@@ -32,21 +32,21 @@ public class Controller {
 			int rt = regions.getJSONObject(i).getJSONArray("row").getInt(1);
 			int cf = regions.getJSONObject(i).getJSONArray("col").getInt(0);
 			int ct = regions.getJSONObject(i).getJSONArray("col").getInt(1);
-			for (int R = rf; R < rt; R++)
-				for (int C = cf; C < ct; C++)
+			for (int R = rf; R <= rt; R++)
+				for (int C = cf; C <= ct; C++)
 					sim.setRegion(R, C, regions.getJSONObject(i).getJSONObject("spec"));
 		}
 		
 		}
 		if (data.has("animals")) {
 			JSONArray animals = data.getJSONArray("animals");
-			for (int j = 0; j < animals.length(); j++) 
-				for (int k = 0; k < animals.getJSONObject(j).getInt("amount"); k++)
-					sim.addAnimal(animals.getJSONObject(j).getJSONObject("spec"));
+			for (int i = 0; i < animals.length(); i++) 
+				for (int k = 0; k < animals.getJSONObject(i).getInt("amount"); k++)
+					sim.addAnimal(animals.getJSONObject(i).getJSONObject("spec"));
 		}
 	}
 	
-	public void run(double t, double dt, boolean sv, OutputStream out) throws IOException { // TODO: Comprobar que escriba el JSON correctamente
+	public void run(double t, double dt, boolean sv, OutputStream out) throws IOException {
 		JSONObject obj = new JSONObject();
 		obj.put("in", sim.asJSON());
 		SimpleObjectViewer view = null; 
@@ -55,7 +55,7 @@ public class Controller {
 			   view = new SimpleObjectViewer("[ECOSYSTEM]", m.getWidth(), m.getHeight(), m.getCols(), m.getRows());  
 			   view.update(toAnimalsInfo(sim.getAnimals()), sim.getTime(), dt); 
 			}
-		while (sim.getTime() < t) {
+		while (sim.getTime() <= t) {
 			sim.advance(dt);
 			if (sv) view.update(toAnimalsInfo(sim.getAnimals()), sim.getTime(), dt);
 		}
@@ -64,6 +64,7 @@ public class Controller {
 			writer.write(obj.toString(4));
 		    writer.flush();
 		}
+		if (sv) view.close(); // Pare cerrar el viewer cuando acabe
 	}
 
 

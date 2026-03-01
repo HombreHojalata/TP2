@@ -8,6 +8,8 @@ import java.util.function.Predicate;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import simulator.misc.Vector2D;
+
 
 public class RegionManager implements AnimalMapView {
 	private int cols;
@@ -19,51 +21,63 @@ public class RegionManager implements AnimalMapView {
 	private Region[][] regions;
 	private Map<Animal, Region> animalRegion;	
 	
-	public RegionManager(int cols, int rows, int width, int height) { // TODO: MIRAR LAS ROWS/COLS
+	public RegionManager(int cols, int rows, int width, int height) {
 		this.cols = cols;
 		this.rows = rows;
 		this.width = width;
 		this.height = height;
-		regWidth = width / cols;
-		regHeight = height / rows;
-		regions = new Region[cols][rows];
-		for (int i = 0; i < cols; i++)
-			for (int j = 0; j < rows; j++)
+		regWidth = (int) Math.ceil((double) width / cols);
+		regHeight = (int) Math.ceil((double) height / rows);
+		regions = new Region[rows][cols];
+		for (int i = 0; i < rows; i++)
+			for (int j = 0; j < cols; j++)
 				regions[i][j] = new DefaultRegion();
 		animalRegion = new HashMap<>();
 	}
 	
 	public void setRegion(int row, int col, Region r) {
-		regions[col][row] = r;
-		for (Animal a : r.getAnimals())
+		Region oldRegion = regions[row][col];
+		regions[row][col] = r;
+		for (Animal a : oldRegion.getAnimals()) {
+			r.addAnimal(a);
 			animalRegion.put(a, r);
+		}
 	}
 	
-	public void registerAnimal(Animal a) { // TODO: Esto tiene sentido... no?
+	public void registerAnimal(Animal a) {
 		a.init(this);
-		int x = (int) a.getPosition().getX() / regWidth;
-		int y = (int) a.getPosition().getY() / regHeight;
-
-		regions[x][y].addAnimal(a);
-		animalRegion.put(a, regions[x][y]);
+		Region region = getRegionFromPos(a.getPosition());
+		region.addAnimal(a);
+		animalRegion.put(a, region);
 	}
 	
 	public void unregisterAnimal(Animal a) {
-		int x = (int) a.getPosition().getX() / regWidth;
-		int y = (int) a.getPosition().getY() / regHeight;
-
-		regions[x][y].removeAnimal(a);
-		animalRegion.remove(a);
+		Region region = getRegionFromPos(a.getPosition());
+		if (region != null) {
+			region.removeAnimal(a);
+			animalRegion.remove(a);
+		}
 	}
 	
 	public void updateAnimalRegion(Animal a) {
-		int x = (int) a.getPosition().getX() / regWidth;
-		int y = (int) a.getPosition().getY() / regHeight;
+		Region currRegion = animalRegion.get(a);
+		Region newRegion = getRegionFromPos(a.getPosition());
 		
-		if (regions[x][y] != animalRegion.get(a)) {
-			animalRegion.get(a).removeAnimal(a);
-			registerAnimal(a);
+		if (currRegion != newRegion) {
+			currRegion.removeAnimal(a);
+			newRegion.addAnimal(a);
+			animalRegion.put(a, newRegion);
 		}
+	}
+	
+	private Region getRegionFromPos(Vector2D pos) {
+		int x = (int) (pos.getY() / regHeight);
+		int y = (int) (pos.getX() / regWidth);
+		
+		
+		x = Math.max(0, Math.min(x, rows - 1));
+		y = Math.max(0, Math.min(y, cols - 1));
+		return regions[x][y];
 	}
 	
 	@Override
@@ -72,30 +86,9 @@ public class RegionManager implements AnimalMapView {
 	}
 	
 	public void updateAllRegions(double dt) {
-		for (int i = 0; i < cols; i++)
-			for (int j = 0; j < rows; j++)
+		for (int i = 0; i < rows; i++)
+			for (int j = 0; j < cols; j++)
 				regions[i][j].update(dt);
-	}
-	
-	public List<Animal> getAnimalsInRangeOtro(Animal a, Predicate<Animal> filter) { // TODO: Rehacer
-		List<Animal> list = new ArrayList<>();
-		int rangeInCols = (int) Math.ceil(a.getSightRange() / regWidth);
-		int rangeInRows = (int) Math.ceil(a.getSightRange() / regHeight);
-		int centerCol = (int) a.getPosition().getX() / regWidth;
-		int centerRow = (int) a.getPosition().getY() / regHeight;
-		
-		for (int i = centerCol - rangeInCols; i <= rangeInCols + rangeInRows; i++) {
-			for (int j = centerRow - rangeInRows; j <= rangeInRows + rangeInRows; j++) {
-				if (i >= 0 && i < cols && j >= 0 && j < rows) {
-					for (Animal an : regions[i][j].getAnimals()) {
-						if (an != a && a.getPosition().distanceTo(an.getPosition()) <= a.getSightRange() && filter.test(an))
-							list.add(an);
-					}
-				}
-			}
-		}
-
-		return list;
 	}
 	
 	@Override
@@ -106,20 +99,25 @@ public class RegionManager implements AnimalMapView {
 		int centerCol = (int) a.getPosition().getX() / regWidth;
 		int centerRow = (int) a.getPosition().getY() / regHeight;
 
-		for (int i = centerCol - rangeInCols; i < centerCol + rangeInCols; i++)
-			for (int j = centerRow - rangeInRows; j < centerRow + rangeInRows; j++)
-				if (i >= 0 && i < cols && j >= 0 && j < rows) // Comprueba el out of bounds
-					for (Animal an : regions[i][j].getAnimals())
-						if (an != a && a.getPosition().distanceTo(an.getPosition()) <= a.getSightRange() && filter.test(an))
+		for (int i = centerRow - rangeInRows; i <= centerRow + rangeInRows; i++) {
+			for (int j = centerCol - rangeInCols; j <= centerCol + rangeInCols; j++) {
+				if (i >= 0 && i < rows && j >= 0 && j < cols) { // Comprueba el out of bounds
+					for (Animal an : regions[i][j].getAnimals()) {
+						if (an != a && a.getPosition().distanceTo(an.getPosition()) <= a.getSightRange() && filter.test(an)) {
 							list.add(an);
+						}
+					}
+				}
+			}
+		}
 		return list;
 	}
 	
 	public JSONObject asJSON() {
 		JSONArray jsonArray = new JSONArray();
 		
-		for (int i = 0; i < cols; i++) {
-			for (int j = 0; j < rows; j++) {
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; j++) {
 				JSONObject json = new JSONObject();
 				json.put("row", i);
 				json.put("col", j);

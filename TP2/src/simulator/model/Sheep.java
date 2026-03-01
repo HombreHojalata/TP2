@@ -39,7 +39,7 @@ public class Sheep extends Animal {
 		case DANGER: updateDanger(dt); break;
 		case MATE: updateMate(dt); break;
 		case HUNGER: break; // Un objeto Sheep nunca puede estar en este estado
-		case DEAD: break; // Nunca esta en este estado
+		case DEAD: break; // No puede llegar aquí
 		}
 		AnimalMapView regMngr = getRegionManager();
 		if (outOfMap()) {
@@ -55,64 +55,67 @@ public class Sheep extends Animal {
 	}
 	
 	private void updateNormal(double dt) {
-		moveAndStats(dt, -FOOD_DROP_RATE_SHEEP * dt, DESIRE_INCREASE_RATE_SHEEP * dt, 1.0);
-		if (getPosition().distanceTo(getDestination()) < COLLISION_RANGE) 
-			setPosition(randomPosition(0, getRegionManager().getWidth(), 0, getRegionManager().getHeight()));
+		if (getPosition().distanceTo(getDestination()) < COLLISION_RANGE)
+			setDestination(randomPosition(0, getRegionManager().getWidth(), 0, getRegionManager().getHeight()));
+		moveAndStats(dt, -1 * FOOD_DROP_RATE_SHEEP * dt, DESIRE_INCREASE_RATE_SHEEP * dt, 1.0);
 		if (dangerSource == null)
-			dangerSource = this.dangerStrategy.select(this, getAnimalsInRange(Diet.CARNIVORE.toString()));
-		if (dangerSource != null)
-			setState(State.DANGER);
-		else if (getDesire() > DESIRE_THRESHOLD_SHEEP)
-			setState(State.MATE);
+			dangerSource = this.dangerStrategy.select(this, getAnimalsInRange(a -> a.getDiet() == Diet.CARNIVORE && a.getState() != State.DEAD));
+		if (dangerSource != null) setState(State.DANGER);
+		else if (getDesire() > DESIRE_THRESHOLD_SHEEP) setState(State.MATE);
 	}
 	
 	private void updateDanger(double dt) {
 		if (dangerSource != null && dangerSource.getState() == State.DEAD)
 			dangerSource = null;
-		if (dangerSource == null)
-			updateNormal(dt);
-		else {
-			setDestination(getPosition().plus(getPosition().minus(dangerSource.getPosition().direction())));
-			moveAndStats(dt, -FOOD_DROP_RATE_SHEEP * dt * FOOD_DROP_BOOST_FACTOR_SHEEP, DESIRE_INCREASE_RATE_SHEEP * dt, BOOST_FACTOR_SHEEP);
+		if (dangerSource == null) {
+			if (getPosition().distanceTo(getDestination()) < COLLISION_RANGE)
+				setDestination(randomPosition(0, getRegionManager().getWidth(), 0, getRegionManager().getHeight()));
+			moveAndStats(dt, -1 * FOOD_DROP_RATE_SHEEP * dt, DESIRE_INCREASE_RATE_SHEEP * dt, 1.0);
 		}
-		if (dangerSource == null || getPosition().distanceTo(dangerSource.getPosition()) > getSightRange())
-			dangerSource = this.dangerStrategy.select(this, getAnimalsInRange(Diet.CARNIVORE.toString()));
-		if (dangerSource == null)
-			setState(getDesire() < DESIRE_THRESHOLD_SHEEP ? State.NORMAL : State.MATE);
+		else {
+			setDestination(getPosition().plus(getPosition().minus(dangerSource.getPosition()).direction()));
+			moveAndStats(dt, -1 * FOOD_DROP_RATE_SHEEP * dt * FOOD_DROP_BOOST_FACTOR_SHEEP, DESIRE_INCREASE_RATE_SHEEP * dt, BOOST_FACTOR_SHEEP);
+		}
+		if (dangerSource == null || dangerSource.getPosition().distanceTo(getPosition()) > getSightRange()) {
+			dangerSource = this.dangerStrategy.select(this, getAnimalsInRange(a -> a.getDiet() == Diet.CARNIVORE && a.getState() != State.DEAD));
+			if (dangerSource == null) {
+				if (getDesire() < DESIRE_THRESHOLD_SHEEP) setState(State.NORMAL);
+				else setState(State.MATE);
+			}
+		}
 	}
-	private void updateMate(double dt) {
-		Animal mateTarget = getMateTarget();
-		if (mateTarget != null && (mateTarget.getState() == State.DEAD || getPosition().distanceTo(mateTarget.getPosition()) > getSightRange()))
+	
+	private void updateMate(double dt) {	
+		if (getMateTarget() != null && (getMateTarget().getState() == State.DEAD || getPosition().distanceTo(getMateTarget().getPosition()) > getSightRange())) {
 			setMateTarget(null);
+		}
 		if (getMateTarget() == null) {
-			setMateTarget(getMateStrategy().select(this, getAnimalsInRange(this.getGeneticCode())));
-			if (getMateTarget() == null)
-				updateNormal(dt);
+			setMateTarget(getMateStrategy().select(this, getAnimalsInRange(a -> a.getGeneticCode().equals(getGeneticCode()) && a.getState() != State.DEAD)));
+			if (getMateTarget() == null) {
+				if (getPosition().distanceTo(getDestination()) < COLLISION_RANGE)
+					setDestination(randomPosition(0, getRegionManager().getWidth(), 0, getRegionManager().getHeight()));
+				moveAndStats(dt, -1 * FOOD_DROP_RATE_SHEEP * dt, DESIRE_INCREASE_RATE_SHEEP * dt, 1.0);
+			}
 		}
 		if (getMateTarget() != null) {
 			setDestination(getMateTarget().getPosition());
-			moveAndStats(dt, -FOOD_DROP_RATE_SHEEP * dt * FOOD_DROP_BOOST_FACTOR_SHEEP, DESIRE_INCREASE_RATE_SHEEP * dt, BOOST_FACTOR_SHEEP);
+			moveAndStats(dt, -1 * FOOD_DROP_RATE_SHEEP * dt * FOOD_DROP_BOOST_FACTOR_SHEEP, DESIRE_INCREASE_RATE_SHEEP * dt, BOOST_FACTOR_SHEEP);
 			if (getPosition().distanceTo(getMateTarget().getPosition()) < COLLISION_RANGE) {
 				setDesire(0);
 				getMateTarget().setDesire(0);
 				if (!isPregnant() && Utils.RAND.nextDouble() < PREGNANT_PROBABILITY_SHEEP)
-					this.setBaby(new Sheep(this, getMateTarget()));
+					setBaby(new Sheep(this, getMateTarget()));
 				setMateTarget(null);
 			}
 		}
-		dangerSource = this.dangerStrategy.select(this, getAnimalsInRange(Diet.CARNIVORE.toString()));
-		if (dangerSource != null)
-			setState(State.DANGER);
-		else if (getDesire() < DESIRE_THRESHOLD_SHEEP)
-			setState(State.NORMAL);
+		if (dangerSource == null) dangerSource = this.dangerStrategy.select(this, getAnimalsInRange(a -> a.getDiet() == Diet.CARNIVORE && a.getState() != State.DEAD));
+		if (dangerSource != null) setState(State.DANGER);
+		else if (getDesire() < DESIRE_THRESHOLD_SHEEP) setState(State.NORMAL);
 	}
-
 	
 	@Override protected void setNormalStateAction() { dangerSource = null; setMateTarget(null); }
 	@Override protected void setMateStateAction() {	dangerSource = null; }
 	@Override protected void setHungerStateAction() { /**/ }
 	@Override protected void setDangerStateAction() { setMateTarget(null); }
 	@Override protected void setDeadStateAction() { dangerSource = null; setMateTarget(null); }
-	
-	
-} 
+}
