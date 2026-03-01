@@ -121,7 +121,7 @@ public class Main {
 				.desc("A real number representing the total simulation time in seconds. Default value: "
 						+ DEFAULT_TIME + ".")
 				.build());
-		//Delta time //TODO: PONER la Constante
+		//Delta time
 		cmdLineOptions.addOption(Option.builder("dt").longOpt("delta time").hasArg()
 				.desc(" A double representing actual time, in  \n"+ "seconds, per simulation step. Default value: 0.03")
 				.build());

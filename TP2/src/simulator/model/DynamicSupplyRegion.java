@@ -34,6 +34,6 @@ public class DynamicSupplyRegion extends Region {
 	
 	@Override
 	public void update(double dt) {
-		if (Utils.RAND.nextDouble() < 0.5) food += factor*dt; // TODO: Igual hay que hacer funcionamiento de update normal
+		if (Utils.RAND.nextDouble() < 0.5) food += factor*dt;
 	}
 }
