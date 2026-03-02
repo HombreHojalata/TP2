@@ -39,10 +39,12 @@ public class Main {
 			desc = modeDesc;
 		}
 
+		@SuppressWarnings("unused")
 		public String getTag() {
 			return tag;
 		}
 
+		@SuppressWarnings("unused")
 		public String getDesc() {
 			return desc;
 		}

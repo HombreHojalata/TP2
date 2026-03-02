@@ -37,7 +37,7 @@ public class BuilderBasedFactory<T> implements Factory<T> {
 		}
 		if (!info.has("type") || info.getString("type").isEmpty()) throw new IllegalArgumentException("'info' needs a type that can't be empty");
 		
-		for (String s : builders.keySet()) {
+		for (String s : builders.keySet()) { // TODO: Revisar
 			if (s.equals(info.getString("type"))) {
 				JSONObject obj =  info.has("data") ? info.getJSONObject("data") : new JSONObject();
 				 T = builders.get(s).createInstance(obj);

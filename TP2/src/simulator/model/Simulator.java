@@ -55,13 +55,9 @@ public class Simulator implements JSONable {
 		
 		regionManager.updateAllRegions(dt);
 		
-		List<Animal> babys = new ArrayList<>();
-		for (Animal a : animals) {
-			if (a.isPregnant())
-				babys.add(a.deliverBaby());
-		}
-		for (Animal b : babys)
-			addAnimal(b);
+		List<Animal> pregnants = this.animals.stream().filter(a -> a.isPregnant()).toList(); 
+		for (Animal p : pregnants)
+			addAnimal(p.deliverBaby());
 	}
 	
 	public MapInfo getMapInfo() {return regionManager;}	

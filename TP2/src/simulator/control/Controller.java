@@ -46,7 +46,7 @@ public class Controller {
 		}
 	}
 	
-	public void run(double t, double dt, boolean sv, OutputStream out) throws IOException {
+	public void run(double t, double dt, boolean sv, OutputStream out) throws IOException { // TODO: Mirar como escribir por pantalla
 		JSONObject obj = new JSONObject();
 		obj.put("in", sim.asJSON());
 		SimpleObjectViewer view = null; 

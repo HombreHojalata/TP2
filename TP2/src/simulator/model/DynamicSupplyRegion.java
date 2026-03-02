@@ -1,5 +1,7 @@
 package simulator.model;
 
+import java.util.List;
+
 import simulator.misc.Utils;
 
 public class DynamicSupplyRegion extends Region {
@@ -23,10 +25,8 @@ public class DynamicSupplyRegion extends Region {
 	@Override
 	public double getFood(AnimalInfo a, double dt) {
 		if (a.getDiet() != Diet.HERBIVORE) return 0;
-		int n = 0;
-		for (Animal an : getAnimals()) {
-			if (an.getDiet() == Diet.HERBIVORE) n++;
-		}
+		List<Animal> herbs = this.animals.stream().filter(an -> an.getDiet() == Diet.HERBIVORE).toList();
+		int n = herbs.size();
 		double amount = Math.min(food, FOOD_EAT_RATE_HERBS * Math.exp(-Math.max(0, n - FOOD_SHORTAGE_TH_HERBS) * FOOD_SHORTAGE_EXP_HERBS));
 		food -= amount;
 		return amount;
