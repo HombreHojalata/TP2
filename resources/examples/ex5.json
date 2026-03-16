@@ -1,0 +1,178 @@
+{
+	"width" : 800,
+	"height" : 600,
+	"cols" : 20,
+	"rows" : 15,
+	"animals" : [{
+			"amount" : 40,
+			"spec" : {
+				"type" : "sheep",
+				"data" : {
+					"pos" : {
+						"x_range" : [
+							100,
+							200
+						],
+						"y_range" : [
+							100,
+							200
+						]
+					}
+				}
+			}
+		}, {
+			"amount" : 40,
+			"spec" : {
+				"type" : "sheep",
+				"data" : {
+					"pos" : {
+						"x_range" : [
+							600,
+							700
+						],
+						"y_range" : [
+							100,
+							200
+						]
+					}
+				}
+			}
+		}, {
+			"amount" : 40,
+			"spec" : {
+				"type" : "sheep",
+				"data" : {
+					"pos" : {
+						"x_range" : [
+							600,
+							700
+						],
+						"y_range" : [
+							450,
+							550
+						]
+					}
+				}
+			}
+		}, {
+			"amount" : 40,
+			"spec" : {
+				"type" : "sheep",
+				"data" : {
+					"pos" : {
+						"x_range" : [
+							100,
+							200
+						],
+						"y_range" : [
+							450,
+							550
+						]
+					}
+				}
+			}
+		}, {
+			"amount" : 40,
+			"spec" : {
+				"type" : "sheep",
+				"data" : {
+					"pos" : {
+						"x_range" : [
+							400,
+							500
+						],
+						"y_range" : [
+							250,
+							350
+						]
+					}
+				}
+			}
+		}, {
+			"amount" : 6,
+			"spec" : {
+				"type" : "wolf",
+				"data" : {
+					"pos" : {
+						"x_range" : [
+							100,
+							200
+						],
+						"y_range" : [
+							100,
+							200
+						]
+					}
+				}
+			}
+		}, {
+			"amount" : 6,
+			"spec" : {
+				"type" : "wolf",
+				"data" : {
+					"pos" : {
+						"x_range" : [
+							600,
+							700
+						],
+						"y_range" : [
+							100,
+							200
+						]
+					}
+				}
+			}
+		}, {
+			"amount" : 6,
+			"spec" : {
+				"type" : "wolf",
+				"data" : {
+					"pos" : {
+						"x_range" : [
+							600,
+							700
+						],
+						"y_range" : [
+							450,
+							550
+						]
+					}
+				}
+			}
+		}, {
+			"amount" : 6,
+			"spec" : {
+				"type" : "wolf",
+				"data" : {
+					"pos" : {
+						"x_range" : [
+							100,
+							200
+						],
+						"y_range" : [
+							450,
+							550
+						]
+					}
+				}
+			}
+		}, {
+			"amount" : 6,
+			"spec" : {
+				"type" : "wolf",
+				"data" : {
+					"pos" : {
+						"x_range" : [
+							400,
+							500
+						],
+						"y_range" : [
+							250,
+							350
+						]
+					}
+				}
+			}
+		}
+	]
+}
